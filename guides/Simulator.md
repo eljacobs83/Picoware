@@ -8,7 +8,7 @@ display and input, while Picoware itself runs inside MicroPython.
 - Full Picoware UI with framebuffer and keyboard input
 - Real network access via host DNS/TCP/TLS (or `--network offline` for fixtures)
 - Audio playback for WAV/MP3 files and HTTP radio streams
-- Simulated SD card at `sim_mp/sdcard` (auto-seeded on first run)
+- Simulated SD card at `simulator/sdcard` (auto-seeded on first run)
 - Headless mode for automated testing (`--headless`)
 
 ## Installation
@@ -42,7 +42,7 @@ that have no direct equivalent on Windows. Use WSL2 or a Linux VM.
 Build the native helpers (SDL viewer, audio sidecars), then launch:
 
 ```sh
-cd sim_mp
+cd simulator
 ./build.sh
 micropython run.py --viewer
 ```
@@ -62,7 +62,7 @@ micropython run.py --viewer
 ### Common commands
 
 ```sh
-cd sim_mp
+cd simulator
 
 # Interactive viewer (default scale 2x)
 micropython run.py --viewer
@@ -88,7 +88,7 @@ micropython run.py --viewer --apps-source /path/to/apps
 Native binaries are built automatically on first use. To rebuild manually:
 
 ```sh
-cd sim_mp
+cd simulator
 
 ./build.sh --force    # rebuild all
 ./build.sh --clean    # remove binaries
