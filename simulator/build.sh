@@ -55,33 +55,21 @@ needs_rebuild() {
 # SDL2 discovery (cached)
 SDL2_CFLAGS=""
 SDL2_LIBS=""
-SDL2_ARCH_FLAGS=""
-SDL2_DISCOVERY_NOTES=""
+SDL2_ARCH_FLAGS=""   
 
 # Check whether a dylib/framework contains the given architecture.
 # Usage: _dylib_has_arch <path-to-dylib> <arch>
 _dylib_has_arch() {
     [ -f "$1" ] || return 1
+    # lipo is macOS only; skip architecture check on other platforms
+    if [ "$(uname -s)" != "Darwin" ]; then
+        return 0
+    fi
     lipo -info "$1" 2>/dev/null | grep -q "$2"
 }
 
-_note_sdl2() {
-    SDL2_DISCOVERY_NOTES="${SDL2_DISCOVERY_NOTES}${SDL2_DISCOVERY_NOTES:+
-}$*"
-}
-
-_set_sdl2_flags() {
-    # $1 = source label, $2 = cflags, $3 = libs
-    _source=$1
-    SDL2_CFLAGS=$2
-    SDL2_LIBS=$3
-    _note_sdl2 "$_source cflags: $SDL2_CFLAGS"
-    _note_sdl2 "$_source libs: $SDL2_LIBS"
-    return 0
-}
-
 _discover_sdl2() {
-    if [ -n "$SDL2_LIBS" ]; then
+    if [ -n "$SDL2_CFLAGS" ]; then
         return 0
     fi
 
@@ -136,12 +124,6 @@ _discover_sdl2() {
 
         SDL2_LIBS="-L${_libdir} -lSDL2"
 
-        # Linux and other non-macOS platforms do not use lipo. If the
-        # headers and library were found, let the compiler/linker validate it.
-        if [ "$_os" != "Darwin" ]; then
-            return 0
-        fi
-
         # Architecture check
         if _dylib_has_arch "$_dylib" "$_arch"; then
             return 0
@@ -160,63 +142,9 @@ _discover_sdl2() {
         return 1
     }
 
-    # Prefer /opt/homebrew on Apple Silicon when pkg-config is used.
-    if [ "$_os" = "Darwin" ] && [ "$_arch" = "arm64" ]; then
-        export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-    fi
-
-    # 1. pkg-config. This is the most reliable path on Linux multiarch
-    # installs and also works for most Homebrew installs.
-    if command -v pkg-config >/dev/null 2>&1; then
-        if pkg-config --exists sdl2 2>/dev/null; then
-            _pc_cflags=$(pkg-config --cflags sdl2 2>/dev/null)
-            _pc_libs=$(pkg-config --libs sdl2 2>/dev/null)
-            if [ -n "$_pc_libs" ]; then
-                if [ "$_os" = "Darwin" ]; then
-                    _pc_inc=$(pkg-config --variable=includedir sdl2 2>/dev/null)
-                    _pc_lib=$(pkg-config --variable=libdir sdl2 2>/dev/null)
-                    _note_sdl2 "pkg-config cflags: $_pc_cflags"
-                    _note_sdl2 "pkg-config libs: $_pc_libs"
-                    if [ -n "$_pc_inc" ] && [ -n "$_pc_lib" ]; then
-                        _try_sdl2 "$_pc_inc" "$_pc_lib" && return 0
-                    fi
-                    _note_sdl2 "pkg-config sdl2 was not usable for macOS architecture validation"
-                else
-                    _set_sdl2_flags "pkg-config" "$_pc_cflags" "$_pc_libs" && return 0
-                fi
-            fi
-            _note_sdl2 "pkg-config found sdl2 but returned empty linker flags"
-        else
-            _note_sdl2 "pkg-config could not find sdl2"
-        fi
-    else
-        _note_sdl2 "pkg-config not found"
-    fi
-
-    # 2. sdl2-config fallback.
-    if command -v sdl2-config >/dev/null 2>&1; then
-        _sc_cflags=$(sdl2-config --cflags 2>/dev/null)
-        _sc_libs=$(sdl2-config --libs 2>/dev/null)
-        if [ -n "$_sc_libs" ]; then
-            if [ "$_os" = "Darwin" ]; then
-                _sc_prefix=$(sdl2-config --prefix 2>/dev/null)
-                _note_sdl2 "sdl2-config cflags: $_sc_cflags"
-                _note_sdl2 "sdl2-config libs: $_sc_libs"
-                if [ -n "$_sc_prefix" ]; then
-                    _try_sdl2 "$_sc_prefix/include" "$_sc_prefix/lib" && return 0
-                fi
-                _note_sdl2 "sdl2-config sdl2 was not usable for macOS architecture validation"
-            else
-                _set_sdl2_flags "sdl2-config" "$_sc_cflags" "$_sc_libs" && return 0
-            fi
-        fi
-        _note_sdl2 "sdl2-config found but returned empty linker flags"
-    else
-        _note_sdl2 "sdl2-config not found"
-    fi
-
-    # 3. macOS Homebrew explicit probes, including Rosetta installs.
+    # 1. macOS Homebrew
     if [ "$_os" = "Darwin" ]; then
+        # Check both Homebrew prefixes
         for _brew_prefix in "/opt/homebrew" "/usr/local"; do
             if [ -d "$_brew_prefix/opt/sdl2" ]; then
                 _try_sdl2 "$_brew_prefix/opt/sdl2/include" "$_brew_prefix/opt/sdl2/lib" && return 0
@@ -227,13 +155,52 @@ _discover_sdl2() {
         done
     fi
 
-    # 4. Common Linux paths
+    # 2. pkg-config
+    # Prefer /opt/homebrew on Apple Silicon
+    if [ "$_os" = "Darwin" ] && [ "$_arch" = "arm64" ]; then
+        export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+    fi
+
+    if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists sdl2 2>/dev/null; then
+        _pc_inc=$(pkg-config --variable=includedir sdl2 2>/dev/null)
+        _pc_lib=$(pkg-config --variable=libdir sdl2 2>/dev/null)
+        [ -z "$_pc_inc" ] && _pc_inc="$(pkg-config --variable=prefix sdl2 2>/dev/null)/include"
+        [ -z "$_pc_lib" ] && _pc_lib="$(pkg-config --variable=prefix sdl2 2>/dev/null)/lib"
+        _try_sdl2 "$_pc_inc" "$_pc_lib" && return 0
+    fi
+
+    # 3. sdl2-config fallback
+    if command -v sdl2-config >/dev/null 2>&1; then
+        _sc_prefix=$(sdl2-config --prefix 2>/dev/null)
+        _sc_inc="${_sc_prefix}/include"
+        _sc_lib=$(sdl2-config --libdir 2>/dev/null)
+        [ -z "$_sc_lib" ] && _sc_lib="${_sc_prefix}/lib"
+        _try_sdl2 "$_sc_inc" "$_sc_lib" && return 0
+    fi
+
+    # 4. Common Linux paths (including multiarch)
+    # Auto-detect the system's multiarch tuple (e.g. aarch64-linux-gnu, x86_64-linux-gnu)
+    _multiarch=""
+    if command -v gcc >/dev/null 2>&1; then
+        _multiarch=$(gcc -print-multiarch 2>/dev/null)
+    fi
+    if [ -z "$_multiarch" ] && command -v dpkg-architecture >/dev/null 2>&1; then
+        _multiarch=$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null)
+    fi
+
     for _sys_prefix in "/usr" "/usr/local"; do
         _try_sdl2 "$_sys_prefix/include" "$_sys_prefix/lib" && return 0
         _try_sdl2 "$_sys_prefix/include/SDL2" "$_sys_prefix/lib" && return 0
-        # some 64-bit distros
-        _try_sdl2 "$_sys_prefix/include" "$_sys_prefix/lib/x86_64-linux-gnu" && return 0
-        _try_sdl2 "$_sys_prefix/include/SDL2" "$_sys_prefix/lib/x86_64-linux-gnu" && return 0
+        # try detected multiarch path first
+        if [ -n "$_multiarch" ]; then
+            _try_sdl2 "$_sys_prefix/include" "$_sys_prefix/lib/$_multiarch" && return 0
+            _try_sdl2 "$_sys_prefix/include/SDL2" "$_sys_prefix/lib/$_multiarch" && return 0
+        fi
+        # fallback: common multiarch paths
+        for _ma in x86_64-linux-gnu aarch64-linux-gnu arm-linux-gnueabihf; do
+            _try_sdl2 "$_sys_prefix/include" "$_sys_prefix/lib/$_ma" && return 0
+            _try_sdl2 "$_sys_prefix/include/SDL2" "$_sys_prefix/lib/$_ma" && return 0
+        done
     done
 
     return 1
@@ -244,7 +211,7 @@ require_sdl2() {
         return 0
     fi
     cat >&2 <<'EOF'
-SDL2 development files not usable.
+SDL2 development files not found.
   macOS:            brew install sdl2
   Debian/Ubuntu:    sudo apt install libsdl2-dev
   Fedora:           sudo dnf install SDL2-devel
@@ -255,9 +222,6 @@ If you're on Apple Silicon and only have x86_64 SDL2 (Rosetta Homebrew),
 the script will automatically build x86_64 binaries that run under Rosetta 2.
 For native arm64 builds, install SDL2 via native Homebrew at /opt/homebrew.
 EOF
-    if [ -n "$SDL2_DISCOVERY_NOTES" ]; then
-        printf '\nSDL2 discovery notes:\n%s\n' "$SDL2_DISCOVERY_NOTES" >&2
-    fi
     exit 2
 }
 
