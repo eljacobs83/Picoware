@@ -301,5 +301,12 @@ cp "$micropython_dir"/build-WAVESHARE_RP2350_TOUCH_LCD_3_49/firmware.uf2 "$picow
 echo "Waveshare - 3.49 build complete."
 
 echo "MicroPython Picoware Waveshare 3.49 build completed successfully!"
+
+echo "Starting CrowPanel 10.1 build process..."
+bash "$picoware_dir"/tools/micropython-crowpanel.sh
+
+echo "Starting Cardputer-ADV build process..."
+bash "$picoware_dir"/tools/micropython-cardputer.sh
+
 echo "---------------------------------------"
 echo "All MicroPython Picoware builds completed successfully!"
