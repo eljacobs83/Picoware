@@ -174,22 +174,22 @@ echo "Starting PicoCalc build process..."
 cd "$micropython_dir"
 
 # PicoCalc - Pico
-make -j BOARD=RPI_PICO USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake MICROPY_HW_FLASH_STORAGE_BYTES=1048576 CFLAGS_EXTRA="-DPICOCALC"
+make -j BOARD=RPI_PICO USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake MICROPY_HW_FLASH_STORAGE_BYTES=868352 CFLAGS_EXTRA="-DPICOCALC"
 cp "$micropython_dir"/build-RPI_PICO/firmware.uf2 "$picoware_dir"/builds/MicroPython/Picoware-PicoCalcPico.uf2
 echo "PicoCalc - Pico build complete."
 
 # PicoCalc - Pico W
-make -j BOARD=RPI_PICO_W USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake CFLAGS_EXTRA="-DPICOCALC"
+make -j BOARD=RPI_PICO_W USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake MICROPY_HW_FLASH_STORAGE_BYTES=442368 CFLAGS_EXTRA="-DPICOCALC"
 cp "$micropython_dir"/build-RPI_PICO_W/firmware.uf2 "$picoware_dir"/builds/MicroPython/Picoware-PicoCalcPicoW.uf2
 echo "PicoCalc - Pico W build complete."
 
 # PicoCalc - Pico 2
-make -j BOARD=RPI_PICO2 USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake CFLAGS_EXTRA="-DPICOCALC"
+make -j BOARD=RPI_PICO2 USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake MICROPY_HW_FLASH_STORAGE_BYTES=2097152 CFLAGS_EXTRA="-DPICOCALC"
 cp "$micropython_dir"/build-RPI_PICO2/firmware.uf2 "$picoware_dir"/builds/MicroPython/Picoware-PicoCalcPico2.uf2
 echo "PicoCalc - Pico 2 build complete."
 
 # PicoCalc - Pico 2W 
-make -j BOARD=RPI_PICO2_W USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake CFLAGS_EXTRA="-DPICOCALC"
+make -j BOARD=RPI_PICO2_W USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake MICROPY_HW_FLASH_STORAGE_BYTES=2097152 CFLAGS_EXTRA="-DPICOCALC"
 cp "$micropython_dir"/build-RPI_PICO2_W/firmware.uf2 "$picoware_dir"/builds/MicroPython/Picoware-PicoCalcPico2W.uf2
 echo "PicoCalc - Pico 2W build complete."
 
