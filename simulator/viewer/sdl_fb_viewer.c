@@ -62,6 +62,60 @@ static int map_key(SDL_Keycode key)
     }
 }
 
+static int apply_shift(int code)
+{
+    if (code >= 'a' && code <= 'z')
+        return code - 32;
+
+    switch (code)
+    {
+    case '1':
+        return '!';
+    case '2':
+        return '@';
+    case '3':
+        return '#';
+    case '4':
+        return '$';
+    case '5':
+        return '%';
+    case '6':
+        return '^';
+    case '7':
+        return '&';
+    case '8':
+        return '*';
+    case '9':
+        return '(';
+    case '0':
+        return ')';
+    case '`':
+        return '~';
+    case '-':
+        return '_';
+    case '=':
+        return '+';
+    case '[':
+        return '{';
+    case ']':
+        return '}';
+    case '\\':
+        return '|';
+    case ';':
+        return ':';
+    case '\'':
+        return '"';
+    case ',':
+        return '<';
+    case '.':
+        return '>';
+    case '/':
+        return '?';
+    default:
+        return code;
+    }
+}
+
 static void append_key(const char *input_path, int code)
 {
     FILE *f = fopen(input_path, "a");
@@ -446,7 +500,11 @@ int main(int argc, char **argv)
                 }
                 int code = map_key(event.key.keysym.sym);
                 if (code >= 0)
+                {
+                    if (event.key.keysym.mod & KMOD_SHIFT)
+                        code = apply_shift(code);
                     append_key(input_path, code);
+                }
             }
         }
 
