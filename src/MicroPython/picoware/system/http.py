@@ -700,7 +700,6 @@ class HTTP:
         data=None,
         json_data=None,
         headers=None,
-        stream=None,
         auth=None,
         timeout=None,
         parse_headers=True,
@@ -716,7 +715,6 @@ class HTTP:
             data: Request body data
             json_data: JSON data to send (will be serialized)
             headers: HTTP headers dict
-            stream: Stream parameter (unused)
             auth: Authentication tuple (username, password)
             timeout: Request timeout in seconds
             parse_headers: Whether to parse response headers
@@ -986,7 +984,6 @@ class HTTP:
                         None,
                         None,
                         headers,
-                        stream,
                         save_to_file=save_to_file,
                         storage=storage,
                     )
@@ -996,7 +993,6 @@ class HTTP:
                     data,
                     json_data,
                     headers,
-                    stream,
                     save_to_file=save_to_file,
                     storage=storage,
                 )
