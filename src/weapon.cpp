@@ -2,6 +2,7 @@
 #include "pico-game-engine/engine/game.hpp"
 #include "general.hpp"
 #include "level.hpp"
+#include <cstdio>
 
 Weapon::Weapon(WeaponType type, float height, Vector position) : Entity("Weapon", ENTITY_NPC, position, Vector(0, height), nullptr)
 {

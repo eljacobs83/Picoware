@@ -1,6 +1,7 @@
 #include "projectile.hpp"
 #include "pico-game-engine/engine/game.hpp"
 #include <math.h>
+#include <cstdio>
 #include "general.hpp"
 #include "player.hpp"
 #include "game.hpp"

@@ -1,5 +1,6 @@
 #include "enemy.hpp"
 #include <math.h>
+#include <cstdio>
 #include "general.hpp"
 #include "level.hpp"
 
