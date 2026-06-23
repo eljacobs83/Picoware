@@ -29,7 +29,23 @@ def __get_asset_info() -> dict:
     base_url = "https://raw.githubusercontent.com/pico-game-engine/Ghouls/dev/src/assets/"
     base_path = "picoware/apps/games/ghouls/assets/"
 
-    asset_list = [
+    asset_list = __get_asset_list()
+
+    current = asset_list[_asset_index]
+
+    _data = {
+        "name": current,
+        "url": base_url + current,
+        "path": base_path + current,
+    }
+
+    _asset_index += 1
+
+    return _data
+
+def __get_asset_list() -> list:
+    """Get the list of assets to download"""
+    return [
         "weapon-pickup.wav",
         "tron.ghoulsmap",
         "shotgun.wav",
@@ -59,19 +75,6 @@ def __get_asset_info() -> dict:
         "ambience.wav"
     ]
 
-    current = asset_list[_asset_index]
-
-    _data = {
-        "name": current,
-        "url": base_url + current,
-        "path": base_path + current,
-    }
-
-    _asset_index += 1
-
-    return _data
-
-
 def __init_ghouls() -> bool:
     """'Initialize the Ghouls game"""
     global _ghouls
@@ -85,9 +88,14 @@ def __init_ghouls() -> bool:
 def __is_assets_loaded(view_manager) -> bool:
     """Check if at least the first asset is loaded"""
     s = view_manager.storage
-    return s is not None and s.exists(
-        "picoware/apps/games/ghouls/assets/home.ghoulsmap"
-    )
+    if s is None:
+        return False
+    asset_list = __get_asset_list()
+    root_path = "picoware/apps/games/ghouls/assets/"
+    for asset in asset_list:
+        if not s.exists(root_path + asset):
+            return False
+    return True
 
 
 def start(view_manager) -> bool:
