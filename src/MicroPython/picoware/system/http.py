@@ -1057,6 +1057,7 @@ class HTTP:
             result = None
             method = method.upper()
             is_instance = self._is_instance(payload)
+            has_payload = payload is not None
             if method == "GET":
                 result = self.request(
                     "GET",
@@ -1070,8 +1071,8 @@ class HTTP:
                 result = self.request(
                     "POST",
                     url,
-                    payload if is_instance else None,
-                    dumps(payload) if not is_instance else None,
+                    payload if is_instance and has_payload else None,
+                    dumps(payload) if not is_instance and has_payload else None,
                     headers,
                     timeout=timeout,
                     save_to_file=save_to_file,
@@ -1082,8 +1083,8 @@ class HTTP:
                 result = self.request(
                     "PUT",
                     url,
-                    payload if is_instance else None,
-                    dumps(payload) if not is_instance else None,
+                    payload if is_instance and has_payload else None,
+                    dumps(payload) if not is_instance and has_payload else None,
                     headers,
                     timeout=timeout,
                     save_to_file=save_to_file,
@@ -1103,8 +1104,8 @@ class HTTP:
                 result = self.request(
                     "HEAD",
                     url,
-                    payload if is_instance else None,
-                    dumps(payload) if not is_instance else None,
+                    payload if is_instance and has_payload else None,
+                    dumps(payload) if not is_instance and has_payload else None,
                     headers,
                     timeout=timeout,
                     save_to_file=save_to_file,
@@ -1115,8 +1116,8 @@ class HTTP:
                 result = self.request(
                     "PATCH",
                     url,
-                    payload if is_instance else None,
-                    dumps(payload) if not is_instance else None,
+                    payload if is_instance and has_payload else None,
+                    dumps(payload) if not is_instance and has_payload else None,
                     headers,
                     timeout=timeout,
                     save_to_file=save_to_file,
