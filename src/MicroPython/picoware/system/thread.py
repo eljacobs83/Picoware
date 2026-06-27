@@ -212,4 +212,5 @@ class ThreadManager:
                 self._active_task = task
             else:
                 task.error = thread.error
+                self._outgoing = f'[ThreadManager] Failed to start task "{task.name}". Error: "{task.error}"'
         return self._outgoing
