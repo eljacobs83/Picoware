@@ -6,6 +6,7 @@ display and input, while Picoware itself runs inside MicroPython.
 ## Features
 
 - Full Picoware UI with framebuffer and keyboard input
+- Scripted/viewer touch input for supported touch-board profiles
 - Real network access via host DNS/TCP/TLS (or `--network offline` for fixtures)
 - Audio playback for WAV/MP3 files and HTTP radio streams
 - Simulated SD card at `simulator/sdcard` (auto-seeded on first run)
@@ -58,6 +59,7 @@ micropython run.py --viewer
 | `Ctrl+R` | Restart simulator |
 | `Ctrl+Shift+R` | Reset SD card and restart |
 | `Ctrl+1..4` | Change window scale |
+| Left mouse click | Send a touch point to touch-board profiles |
 
 ### Common commands
 
@@ -81,7 +83,87 @@ micropython run.py --viewer --scale 3 --fps 20
 
 # Use a custom apps directory
 micropython run.py --viewer --apps-source /path/to/apps
+
+# Run as a touch board
+micropython run.py --viewer --board waveshare-1.43-rp2350
 ```
+
+Useful board names include `picocalc-pico2w`, `waveshare-1.28-rp2350`,
+`waveshare-1.43-rp2350`, `waveshare-3.49-rp2350`, `crowpanel-10.1`, and
+`cardputer`.
+
+### Game Boy controls
+
+The simulator runs Game Boy ROMs through the native Walnut-CGB helper when it
+is available, with a placeholder fallback if the helper cannot build or start.
+Firmware/PicoCalc controls still work, and the simulator also accepts a
+QWERTY-friendly keymap:
+
+| Key | Game Boy button |
+|---|---|
+| Arrow keys | D-pad |
+| `X` or `]` | A |
+| `Z` or `[` | B |
+| `Enter` or `=` | Start |
+| `Space` or `-` | Select |
+
+### Key harness
+
+Use the simulator key harness to verify the scripted queue and viewer key
+mapping stay aligned:
+
+```sh
+cd simulator
+
+# Run the full key harness
+python3 key_harness.py
+
+# Run only named key checks
+python3 key_harness.py --mode named
+
+# Run only printable text checks
+python3 key_harness.py --mode text
+
+# Run the Text Editor queued-input regression
+python3 key_harness.py --mode editor
+```
+
+The harness drives `micropython run.py --headless --trace-keys` and verifies
+the raw codes produced for named keys, aliases, and printable text input. It
+also checks that the SDL viewer source still maps the expected special keys,
+that filename entry works with the visible on-screen keyboard, and that File
+Manager opens editable text files into the editor path.
+
+### Script input
+
+Simulator scripts support queued key/text input plus simulator state changes:
+
+```text
+app Calculator
+keys down,enter
+text hello
+touch 440 200
+gesture 6 160 160
+battery 42
+```
+
+`touch X Y [GESTURE]` and left-clicks in the viewer update the simulated touch
+controller. `battery N` sets the battery percentage reported by simulator board
+shims.
+
+### Regression harness
+
+Run the full simulator regression suite, including the SDL viewer smoke test:
+
+```sh
+python3 simulator/regression_harness.py
+```
+
+This runs Python compile checks, the capability harness (`--mode all`), the key
+harness, and `git diff --check`. The capability harness includes a viewer mode
+that launches `micropython simulator/run.py --viewer` with SDL's dummy video
+driver, then verifies the generated RGB565 frame, BMP screenshot, status file,
+and nonblank framebuffer data.
 
 ### Rebuilding
 
@@ -93,9 +175,12 @@ cd simulator
 ./build.sh --force    # rebuild all
 ./build.sh --clean    # remove binaries
 ./build.sh viewer     # rebuild only the viewer
+./build.sh gameboy    # rebuild only the Game Boy helper
 ```
 
 ## Notes
 - HTTP radio supports MP3 streams only.
-- GameBoy and Ghouls show placeholder screens (full emulation is not included).
-
+- GameBoy is playable when the native helper builds successfully.
+- Ghouls uses a deterministic simulator scene unless a native sidecar is added.
+- Bluetooth and USB are virtual simulator models; they do not attach to the
+  host Bluetooth radio or create a host USB HID device.
