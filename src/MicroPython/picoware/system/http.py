@@ -950,6 +950,9 @@ class HTTP:
         except OSError:
             s.close()
             raise
+        finally:
+            with self._lock:
+                self._running = False
 
     def request_async(
         self,
@@ -1006,7 +1009,7 @@ class HTTP:
                     stack_size=(
                         _stack_size
                         if self._chunk_size < _stack_size
-                        else self._chunk_size + 16 * 1024
+                        else self._chunk_size 
                     ),
                 )
                 self._current_task = task
