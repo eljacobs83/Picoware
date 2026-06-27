@@ -987,7 +987,7 @@ class HTTP:
                 # Use ThreadManager
                 from picoware.system.thread import ThreadTask
 
-                _stack_size = 32 * 1024
+                _stack_size = 16 * 1024
 
                 task = ThreadTask(
                     "HTTP",
