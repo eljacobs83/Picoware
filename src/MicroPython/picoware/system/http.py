@@ -1141,7 +1141,7 @@ class HTTP:
             return result
         except Exception as e:
             with self._lock:
-                self._async_error = str(e)
+                self._async_error = None if e is None else str(e)
                 self._async_result = None
                 self._state = HTTP_ISSUE
         finally:
