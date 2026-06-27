@@ -107,33 +107,6 @@ QWERTY-friendly keymap:
 | `Enter` or `=` | Start |
 | `Space` or `-` | Select |
 
-### Key harness
-
-Use the simulator key harness to verify the scripted queue and viewer key
-mapping stay aligned:
-
-```sh
-cd simulator
-
-# Run the full key harness
-python3 key_harness.py
-
-# Run only named key checks
-python3 key_harness.py --mode named
-
-# Run only printable text checks
-python3 key_harness.py --mode text
-
-# Run the Text Editor queued-input regression
-python3 key_harness.py --mode editor
-```
-
-The harness drives `micropython run.py --headless --trace-keys` and verifies
-the raw codes produced for named keys, aliases, and printable text input. It
-also checks that the SDL viewer source still maps the expected special keys,
-that filename entry works with the visible on-screen keyboard, and that File
-Manager opens editable text files into the editor path.
-
 ### Script input
 
 Simulator scripts support queued key/text input plus simulator state changes:
@@ -150,20 +123,6 @@ battery 42
 `touch X Y [GESTURE]` and left-clicks in the viewer update the simulated touch
 controller. `battery N` sets the battery percentage reported by simulator board
 shims.
-
-### Regression harness
-
-Run the full simulator regression suite, including the SDL viewer smoke test:
-
-```sh
-python3 simulator/regression_harness.py
-```
-
-This runs Python compile checks, the capability harness (`--mode all`), the key
-harness, and `git diff --check`. The capability harness includes a viewer mode
-that launches `micropython simulator/run.py --viewer` with SDL's dummy video
-driver, then verifies the generated RGB565 frame, BMP screenshot, status file,
-and nonblank framebuffer data.
 
 ### Rebuilding
 

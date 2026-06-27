@@ -228,7 +228,7 @@ def _resolve_frame_interval(mode, fps, is_headless, is_viewer):
         return 33
     if mode == "fast":
         return 0
-    # Keep automation fast by default, but make interactive runs real-time.
+    # Fast default, real-time interactive.
     if is_viewer or not is_headless:
         return 33
     return 0
@@ -403,20 +403,15 @@ def seed_sd(profile="dev"):
         _write_if_missing(sd_root + "/picoware/fixtures/github.json", '{"message":"Picoware simulator GitHub fixture","items":[]}')
         _write_if_missing(sd_root + "/picoware/wikireader/settings.json", '{"full_article":true,"language":"en","theme":"system","history":[],"favorites":[],"offline":[]}')
 
-    # Symlink app files into simulated SD for __import__
+    # Symlink apps for __import__
     _link_app_files()
 
 
 def _link_app_files():
-    """Symlink app files from both apps_unfrozen/ (.py source) and apps/
-    (.mpy compiled) into the simulated SD card at sd_root/picoware/apps/.
-    Recurses into subdirectories so that apps in subfolders (games,
-    flip_social, etc.) are also available.  This is needed because
-    __import__ searches sys.path via the raw VFS, not through sd_mp."""
+    """Symlink app sources into simulated SD for __import__."""
     target = sd_root + "/picoware/apps"
     _link_app_files_into(apps_source, target)
-    # Also link compiled .mpy files from the apps/ directory — subdirectory
-    # apps only exist as .mpy, not as .py in apps_unfrozen/.
+    # Link compiled .mpy subdirectory apps
     _compiled = root + "/builds/MicroPython/apps"
     if _compiled != apps_source:
         _link_app_files_into(_compiled, target, skip_if_py_exists=True)
@@ -446,16 +441,15 @@ def _link_app_files_into(src_dir, dst_dir, skip_if_py_exists=False):
         if st[0] & 0x4000:  # directory
             _link_app_files_into(src, dst, skip_if_py_exists)
         else:
-            # If we're linking .mpy files and a .py counterpart already
-            # exists in the destination, skip to avoid duplicates.
+            # Skip .mpy if .py exists
             if skip_if_py_exists and entry.endswith(".mpy"):
                 _py_name = entry[:-4] + ".py"
                 _py_dst = dst_dir + "/" + _py_name
                 if _exists(_py_dst):
                     continue
-            # Remove stale symlink / file before re-creating
+            # Remove stale symlink first
             _rm_f(dst)
-            # Try os.symlink, fall back to ln -sf
+            # Try symlink, fallback to ln
             try:
                 os.symlink(src, dst)
             except (AttributeError, OSError):
