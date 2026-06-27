@@ -717,7 +717,8 @@ class HTTP:
             if json_data is not None:
                 assert data is None
                 data = json_data
-                s.write(b"Content-Type: application/json\r\n")
+                if "Content-Type" not in headers:
+                    s.write(b"Content-Type: application/json\r\n")
             # Normalize to bytes for non-chunked payloads
             if data and not chunked_data and isinstance(data, str):
                 data = data.encode()
