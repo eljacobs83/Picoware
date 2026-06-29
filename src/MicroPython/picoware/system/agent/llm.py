@@ -35,8 +35,10 @@ class LLM:
             else:
                 self.id = "openai"
                 self.label = "OpenAI"
-                self.model = "gpt-5.4-mini"
-                self.url = "https://api.openai.com/v1/chat/completions"
+                _custom_model = settings.openai_model
+                _custom_url = settings.openai_base_url
+                self.model = _custom_model if _custom_model else "gpt-5.4-mini"
+                self.url = _custom_url if _custom_url else "https://api.openai.com/v1/chat/completions"
             self.api_key = settings.openai_api_key
         elif self.provider_id == DEEPSEEK:
             if d_len < 3:
@@ -60,8 +62,10 @@ class LLM:
                 self.provider_id = OPENAI
                 self.id = "openai"
                 self.label = "OpenAI"
-                self.model = "gpt-5.4-mini"
-                self.url = "https://api.openai.com/v1/chat/completions"
+                _custom_model = settings.openai_model
+                _custom_url = settings.openai_base_url
+                self.model = _custom_model if _custom_model else "gpt-5.4-mini"
+                self.url = _custom_url if _custom_url else "https://api.openai.com/v1/chat/completions"
                 self.api_key = settings.openai_api_key
             else:
                 raise ValueError("No valid API key found for the selected provider.")
