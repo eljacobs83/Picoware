@@ -9,7 +9,7 @@ STATE_DEBUG = const(4)  # toggle (enable/disable)
 STATE_TIME = const(5)  # menu with date (date picker), GMT offset (keyboard)
 STATE_EXIT_BUTTON = const(6)  # selection to choose which button triggers app exits
 STATE_SERVER_SETTINGS = const(7)  # menu with username and password
-STATE_OPENAI_API_KEY = const(8)  # keyboard input for OpenAI API key
+STATE_OPENAI_SETTINGS = const(8)  # sub-menu for OpenAI settings (API key, base URL, model)
 STATE_DEEPSEEK_API_KEY = const(9)  # keyboard input for DeepSeek API key
 
 # modes
@@ -23,6 +23,9 @@ _MODE_SERVER_MENU = const(6)
 _MODE_SERVER_KEYBOARD = const(7)
 _MODE_OPENAI_KEYBOARD = const(8)
 _MODE_DEEPSEEK_KEYBOARD = const(9)
+_MODE_OPENAI_MENU = const(10)
+_MODE_OPENAI_URL_KEYBOARD = const(11)
+_MODE_OPENAI_MODEL_KEYBOARD = const(12)
 
 _settings = None
 _menu = None
@@ -39,6 +42,9 @@ _server_save_requested = False
 _server_keyboard_field = 0  # 0 = username, 1 = password
 _openai_save_requested = False
 _deepseek_save_requested = False
+_openai_menu = None
+_openai_url_save_requested = False
+_openai_model_save_requested = False
 
 
 def __color_values() -> list[int]:
@@ -95,7 +101,7 @@ def __config() -> tuple:
         ("Time", None, None, None),
         ("Exit Button", None, None, None),
         ("Server Settings", None, None, None),
-        ("OpenAI API Key", "picoware/settings/openai_api_key.json", "openai_api_key", ""),
+        ("OpenAI Settings", None, None, None),
         ("DeepSeek API Key", "picoware/settings/deepseek_api_key.json", "deepseek_api_key", ""),
     )
 
@@ -408,6 +414,90 @@ def __openai_save_callback(result: str) -> None:
     _openai_save_requested = True
 
 
+def __open_openai_menu() -> None:
+    """Open the OpenAI Settings sub-menu (API Key / Base URL / Model)."""
+    global _openai_menu, _mode
+    from picoware.gui.menu import Menu
+
+    draw = _view_manager.draw
+    draw.erase()
+    if _openai_menu is not None:
+        del _openai_menu
+        _openai_menu = None
+
+    _openai_menu = Menu(
+        draw,
+        "OpenAI Settings",
+        0,
+        draw.size.y,
+        _view_manager.foreground_color,
+        _view_manager.background_color,
+        _view_manager.selected_color,
+        _view_manager.foreground_color,
+        2,
+    )
+    _openai_menu.add_item("API Key")
+    _openai_menu.add_item("Base URL")
+    _openai_menu.add_item("Model")
+    _openai_menu.draw()
+    _mode = _MODE_OPENAI_MENU
+
+
+def __back_to_openai_menu() -> None:
+    """Return to the OpenAI Settings sub-menu."""
+    global _openai_save_requested, _openai_url_save_requested, _openai_model_save_requested
+
+    keyboard = _view_manager.keyboard
+    keyboard.reset()
+    _openai_save_requested = False
+    _openai_url_save_requested = False
+    _openai_model_save_requested = False
+
+    __open_openai_menu()
+
+
+def __open_openai_url_keyboard() -> None:
+    """Open the keyboard for entering a custom OpenAI-compatible base URL."""
+    global _mode, _openai_url_save_requested
+
+    keyboard = _view_manager.keyboard
+    keyboard.reset()
+    keyboard.title = "OpenAI Base URL"
+    keyboard.response = _settings.openai_base_url
+    keyboard.set_save_callback(__openai_url_save_callback)
+    keyboard.input_manager.reset()
+    keyboard.run(force=True)
+    _openai_url_save_requested = False
+    _mode = _MODE_OPENAI_URL_KEYBOARD
+
+
+def __openai_url_save_callback(result: str) -> None:
+    """Callback triggered when the OpenAI base URL keyboard is saved."""
+    global _openai_url_save_requested
+    _openai_url_save_requested = True
+
+
+def __open_openai_model_keyboard() -> None:
+    """Open the keyboard for entering a custom OpenAI model name."""
+    global _mode, _openai_model_save_requested
+
+    keyboard = _view_manager.keyboard
+    keyboard.reset()
+    keyboard.title = "OpenAI Model"
+    keyboard.response = _settings.openai_model
+    keyboard.set_save_callback(__openai_model_save_callback)
+    keyboard.input_manager.reset()
+    keyboard.run(force=True)
+    _openai_model_save_requested = False
+    _mode = _MODE_OPENAI_MODEL_KEYBOARD
+
+
+def __openai_model_save_callback(result: str) -> None:
+    """Callback triggered when the OpenAI model keyboard is saved."""
+    global _openai_model_save_requested
+    _openai_model_save_requested = True
+
+
 def __open_deepseek_keyboard() -> None:
     """Open the keyboard for entering the DeepSeek API key."""
     global _mode, _deepseek_save_requested
@@ -488,7 +578,7 @@ def start(view_manager) -> bool:
     from picoware.gui.menu import Menu
     from picoware.system.settings import Settings
 
-    global _settings, _menu, _view_manager, _mode, _time_menu, _date_picker, _server_menu, _gmt_save_requested, _server_save_requested, _server_keyboard_field, _openai_save_requested, _deepseek_save_requested
+    global _settings, _menu, _view_manager, _mode, _time_menu, _date_picker, _server_menu, _gmt_save_requested, _server_save_requested, _server_keyboard_field, _openai_save_requested, _deepseek_save_requested, _openai_menu, _openai_url_save_requested, _openai_model_save_requested
 
     _view_manager = view_manager
     _mode = _MODE_MENU
@@ -497,6 +587,8 @@ def start(view_manager) -> bool:
     _server_keyboard_field = 0
     _openai_save_requested = False
     _deepseek_save_requested = False
+    _openai_url_save_requested = False
+    _openai_model_save_requested = False
 
     if _settings is not None:
         del _settings
@@ -513,6 +605,9 @@ def start(view_manager) -> bool:
     if _server_menu is not None:
         del _server_menu
         _server_menu = None
+    if _openai_menu is not None:
+        del _openai_menu
+        _openai_menu = None
 
     view_manager.storage.mkdir("picoware/settings")
 
@@ -567,8 +662,8 @@ def run(view_manager) -> None:
                 __open_choice_button()
             elif selected == STATE_SERVER_SETTINGS:
                 __open_server_menu()
-            elif selected == STATE_OPENAI_API_KEY:
-                __open_openai_keyboard()
+            elif selected == STATE_OPENAI_SETTINGS:
+                __open_openai_menu()
             elif selected == STATE_DEEPSEEK_API_KEY:
                 __open_deepseek_keyboard()
             else:
@@ -650,10 +745,48 @@ def run(view_manager) -> None:
             _openai_save_requested = False
             _settings.openai_api_key = view_manager.keyboard.response or ""
             view_manager.keyboard.reset()
-            __back_to_menu()
+            __back_to_openai_menu()
         elif not view_manager.keyboard.run():
             view_manager.keyboard.reset()
+            __back_to_openai_menu()
+
+    elif _mode == _MODE_OPENAI_MENU:
+        if button == BUTTON_BACK:
             __back_to_menu()
+        elif button in (BUTTON_UP, BUTTON_LEFT):
+            _openai_menu.scroll_up()
+        elif button in (BUTTON_DOWN, BUTTON_RIGHT):
+            _openai_menu.scroll_down()
+        elif button == BUTTON_CENTER:
+            selected = _openai_menu.selected_index
+            if selected == 0:
+                __open_openai_keyboard()
+            elif selected == 1:
+                __open_openai_url_keyboard()
+            else:
+                __open_openai_model_keyboard()
+
+    elif _mode == _MODE_OPENAI_URL_KEYBOARD:
+        global _openai_url_save_requested
+        if _openai_url_save_requested:
+            _openai_url_save_requested = False
+            _settings.openai_base_url = view_manager.keyboard.response or ""
+            view_manager.keyboard.reset()
+            __back_to_openai_menu()
+        elif not view_manager.keyboard.run():
+            view_manager.keyboard.reset()
+            __back_to_openai_menu()
+
+    elif _mode == _MODE_OPENAI_MODEL_KEYBOARD:
+        global _openai_model_save_requested
+        if _openai_model_save_requested:
+            _openai_model_save_requested = False
+            _settings.openai_model = view_manager.keyboard.response or ""
+            view_manager.keyboard.reset()
+            __back_to_openai_menu()
+        elif not view_manager.keyboard.run():
+            view_manager.keyboard.reset()
+            __back_to_openai_menu()
 
     elif _mode == _MODE_DEEPSEEK_KEYBOARD:
         global _deepseek_save_requested
@@ -704,7 +837,7 @@ def stop(view_manager) -> None:
     """Stop the app"""
     from gc import collect
 
-    global _settings, _menu, _toggle, _choice, _time_menu, _date_picker, _server_menu
+    global _settings, _menu, _toggle, _choice, _time_menu, _date_picker, _server_menu, _openai_menu
 
     if _settings is not None:
         del _settings
@@ -724,6 +857,9 @@ def stop(view_manager) -> None:
     if _server_menu is not None:
         del _server_menu
         _server_menu = None
+    if _openai_menu is not None:
+        del _openai_menu
+        _openai_menu = None
     if _menu is not None:
         del _menu
         _menu = None

@@ -18,6 +18,8 @@ class Settings:
             "lvgl_mode": False,
             "onscreen_keyboard": False,
             "openai_api_key": "",
+            "openai_base_url": "",
+            "openai_model": "",
             "server_username": "",
             "server_password": "",
             "theme_color": 0x001F,
@@ -34,6 +36,8 @@ class Settings:
                 "lvgl_mode": bool(self.__fetch_setting("picoware/settings/lvgl_mode.json", "lvgl_mode", False)),
                 "onscreen_keyboard": bool(self.__fetch_setting("picoware/settings/onscreen_keyboard.json", "onscreen_keyboard", False)),
                 "openai_api_key": "",
+                "openai_base_url": "",
+                "openai_model": "",
                 "server_username": self.__fetch_setting("picoware/settings/server_username.json", "username", ""),
                 "server_password": self.__fetch_setting("picoware/settings/server_password.json", "password", ""),
                 "theme_color": int(self.__fetch_setting("picoware/settings/theme_color.json", "theme_color", 0x001F)),
@@ -138,6 +142,28 @@ class Settings:
     def openai_api_key(self, value: str):
         """Set the OpenAI API key."""
         self._settings["openai_api_key"] = value
+        self.__save_settings()
+
+    @property
+    def openai_base_url(self) -> str:
+        """Return the custom OpenAI-compatible base URL (empty = official OpenAI)."""
+        return self._settings.get("openai_base_url", "")
+
+    @openai_base_url.setter
+    def openai_base_url(self, value: str):
+        """Set the custom OpenAI-compatible base URL."""
+        self._settings["openai_base_url"] = value
+        self.__save_settings()
+
+    @property
+    def openai_model(self) -> str:
+        """Return the custom OpenAI model name (empty = use provider default)."""
+        return self._settings.get("openai_model", "")
+
+    @openai_model.setter
+    def openai_model(self, value: str):
+        """Set the custom OpenAI model name."""
+        self._settings["openai_model"] = value
         self.__save_settings()
 
     @property
