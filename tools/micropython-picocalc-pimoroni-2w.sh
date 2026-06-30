@@ -173,8 +173,8 @@ echo "Starting PicoCalc build process..."
 # move to the micropython rp2 port directory
 cd "$micropython_dir"
 
-# ensure pico-sdk and other rp2 submodules are initialised
-make submodules
+# ensure pico-sdk and other rp2 submodules are initialised (BOARD needed for cyw43-driver)
+make BOARD=PIMORONI_PICO_PLUS2W_RP2350 submodules
 
 # ensure mpy-cross is up to date
 make -C ../.. mpy-cross
