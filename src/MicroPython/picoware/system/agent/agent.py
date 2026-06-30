@@ -119,10 +119,9 @@ class Agent:
             # Build request from conversation
             self._build_request(tools)
 
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.llm_provider.api_key}",
-            }
+            headers = {"Content-Type": "application/json"}
+            if self.llm_provider.api_key:
+                headers["Authorization"] = f"Bearer {self.llm_provider.api_key}"
 
             response = self.http.post(
                 self.llm_provider.url,
