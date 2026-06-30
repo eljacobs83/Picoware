@@ -2,15 +2,15 @@
 # Script to build and install the CircuitPython version of Picoware 
 echo "Building CircuitPython Picoware firmware for PicoCalc Pico W..."
 
-# set your locations
-circuitpython_dir="/Users/user/pico/circuitpython"
-picoware_dir="/Users/user/Desktop/Picoware"
+# auto-detect picoware_dir from the script location; allow env var overrides
+picoware_dir="${PICOWARE_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+circuitpython_dir="${CIRCUITPYTHON_DIR:-$HOME/pico/circuitpython}"
 
 echo "Using CircuitPython directory: $circuitpython_dir"
 echo "Using Picoware directory: $picoware_dir"
 
 # Activate virtual environment first
-source ~/pico/circuitpython/venv/bin/activate
+source "$circuitpython_dir/venv/bin/activate"
 
 echo "Compiling PIO files to headers..."
 

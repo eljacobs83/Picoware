@@ -92,16 +92,15 @@ cd ~/pico/micropython
 make -C mpy-cross
 ```
 
-### 3. Set path variables in the build scripts
+### 3. Configure paths
 
-Open `tools/micropython-all.sh` (or the individual target script) and update:
+`picoware_dir` is auto-detected from the script's own location, so no editing is needed if you run the scripts from inside the repository. The MicroPython RP2 port path defaults to `~/pico/micropython/ports/rp2`; override it with an environment variable if yours differs:
 
-```sh
-micropython_dir="/path/to/micropython/ports/rp2"   # e.g. ~/pico/micropython/ports/rp2
-picoware_dir="/path/to/Picoware"                    # root of this repository
+```bash
+export MICROPYTHON_RP2_PORT=/path/to/micropython/ports/rp2
+# PICOWARE_DIR is only needed if running scripts from outside the repo
+export PICOWARE_DIR=/path/to/Picoware
 ```
-
-> The individual per-target scripts (`tools/micropython-picocalc-pico.sh`, etc.) contain the same two variables and must be updated the same way.
 
 ### 4. Build
 
@@ -283,19 +282,22 @@ cd ~/pico/circuitpython
 make -C mpy-cross
 ```
 
-### 2. Set path variables in the build scripts
+### 2. Configure paths
 
-Open `tools/circuitpython-all.sh` (or the individual target script) and update:
+`picoware_dir` is auto-detected from the script's own location. The CircuitPython root defaults to `~/pico/circuitpython`; override with an environment variable if yours differs:
 
-```sh
-circuitpython_dir="/path/to/circuitpython"   # e.g. ~/pico/circuitpython
-picoware_dir="/path/to/Picoware"             # root of this repository
+```bash
+export CIRCUITPYTHON_DIR=/path/to/circuitpython
+# PICOWARE_DIR is only needed if running scripts from outside the repo
+export PICOWARE_DIR=/path/to/Picoware
 ```
 
 ### 3. Activate the CircuitPython virtual environment
 
 ```bash
 source ~/pico/circuitpython/venv/bin/activate
+# or, if using a non-default path:
+source "$CIRCUITPYTHON_DIR/venv/bin/activate"
 ```
 
 ### 4. Build
@@ -319,8 +321,8 @@ The scripts compile two PIO programs to C headers before invoking `make`:
 
 `pioasm` is located by the scripts in this order:
 
-1. `<micropython_dir>/ports/rp2/build-RPI_PICO/pioasm/pioasm` (from a prior MicroPython RP2 build)
-2. `<pico-sdk>/tools/pioasm/build/pioasm`
+1. `~/pico/micropython/ports/rp2/build-RPI_PICO/pioasm/pioasm` (from a prior MicroPython RP2 build)
+2. `~/pico/pico-sdk/tools/pioasm/build/pioasm`
 3. `pioasm` in `PATH`
 4. Built from pico-sdk automatically if none of the above exist
 

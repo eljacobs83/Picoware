@@ -2,30 +2,30 @@
 # Script to build and install the CircuitPython version of Picoware 
 echo "Building CircuitPython Picoware firmware for PicoCalc Pico..."
 
-# set your locations
-circuitpython_dir="/Users/user/pico/circuitpython"
-picoware_dir="/Users/user/Desktop/Picoware"
+# auto-detect picoware_dir from the script location; allow env var overrides
+picoware_dir="${PICOWARE_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+circuitpython_dir="${CIRCUITPYTHON_DIR:-$HOME/pico/circuitpython}"
 
 echo "Using CircuitPython directory: $circuitpython_dir"
 echo "Using Picoware directory: $picoware_dir"
 
 # Activate virtual environment first
-source ~/pico/circuitpython/venv/bin/activate
+source "$circuitpython_dir/venv/bin/activate"
 
 echo "Compiling PIO files to headers..."
 
 # Find pioasm (use MicroPython build or CircuitPython build)
 pioasm_path=""
-if [ -f "/Users/user/pico/micropython/ports/rp2/build-RPI_PICO/pioasm/pioasm" ]; then
-    pioasm_path="/Users/user/pico/micropython/ports/rp2/build-RPI_PICO/pioasm/pioasm"
-elif [ -f "/Users/user/pico/pico-sdk/tools/pioasm/build/pioasm" ]; then
-    pioasm_path="/Users/user/pico/pico-sdk/tools/pioasm/build/pioasm"
+if [ -f "$HOME/pico/micropython/ports/rp2/build-RPI_PICO/pioasm/pioasm" ]; then
+    pioasm_path="$HOME/pico/micropython/ports/rp2/build-RPI_PICO/pioasm/pioasm"
+elif [ -f "$HOME/pico/pico-sdk/tools/pioasm/build/pioasm" ]; then
+    pioasm_path="$HOME/pico/pico-sdk/tools/pioasm/build/pioasm"
 elif command -v pioasm > /dev/null 2>&1; then
     pioasm_path="pioasm"
 else
     # Build pioasm from pico-sdk if not found
     echo "Building pioasm from pico-sdk..."
-    pioasm_build_dir="/Users/user/pico/pico-sdk/tools/pioasm/build"
+    pioasm_build_dir="$HOME/pico/pico-sdk/tools/pioasm/build"
     mkdir -p "$pioasm_build_dir"
     cd "$pioasm_build_dir"
     cmake ..
