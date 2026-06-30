@@ -161,6 +161,12 @@ cp -r "$picoware_dir"/src/MicroPython/websocket "$micropython_dir"/modules/webso
 
 echo "Starting Waveshare 1.28 build process..."
 
+# ensure pico-sdk and other rp2 submodules are initialised
+make submodules
+
+# ensure mpy-cross is up to date
+make -C ../.. mpy-cross
+
 # Waveshare - 1.28 
 make -j BOARD=WAVESHARE_RP2350_TOUCH_LCD_1_28 USER_C_MODULES="$micropython_dir"/modules/Waveshare/RP2350-Touch-LCD-1.28/waveshare_modules.cmake CFLAGS_EXTRA="-DWAVESHARE_1_28"
 cp "$micropython_dir"/build-WAVESHARE_RP2350_TOUCH_LCD_1_28/firmware.uf2 "$picoware_dir"/builds/MicroPython/Picoware-Waveshare-1.28.uf2

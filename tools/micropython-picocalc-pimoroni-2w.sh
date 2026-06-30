@@ -173,6 +173,12 @@ echo "Starting PicoCalc build process..."
 # move to the micropython rp2 port directory
 cd "$micropython_dir"
 
+# ensure pico-sdk and other rp2 submodules are initialised
+make submodules
+
+# ensure mpy-cross is up to date
+make -C ../.. mpy-cross
+
 # PicoCalc - Pimoroni 2W 
 make -j BOARD=PIMORONI_PICO_PLUS2W_RP2350 USER_C_MODULES="$micropython_dir"/modules/PicoCalc/picoware_modules.cmake CFLAGS_EXTRA="-DPICOCALC"
 cp "$micropython_dir"/build-PIMORONI_PICO_PLUS2W_RP2350/firmware.uf2 "$picoware_dir"/builds/MicroPython/Picoware-PicoCalcPimoroni2W.uf2
