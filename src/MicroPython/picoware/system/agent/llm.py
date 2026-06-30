@@ -20,26 +20,30 @@ class LLM:
 
         settings = Settings(storage)
 
-        o_len = len(settings.openai_api_key)
-        d_len = len(settings.deepseek_api_key)
+        o_key = settings.openai_api_key
+        o_url = settings.openai_base_url
+        d_key = settings.deepseek_api_key
 
+        o_len = len(o_key)
+        d_len = len(d_key)
+        # A custom base URL means a local/keyless endpoint — treat as valid without a key
+        has_openai = o_len >= 3 or bool(o_url)
 
-        if o_len < 3 and d_len < 3:
+        if not has_openai and d_len < 3:
             raise ValueError("No API key set in settings for OpenAI or DeepSeek.")
-        
+
         try_other = False
 
         if self.provider_id == OPENAI:
-            if o_len < 3:
+            if not has_openai:
                 try_other = True
             else:
                 self.id = "openai"
                 self.label = "OpenAI"
                 _custom_model = settings.openai_model
-                _custom_url = settings.openai_base_url
                 self.model = _custom_model if _custom_model else "gpt-5.4-mini"
-                self.url = _custom_url if _custom_url else "https://api.openai.com/v1/chat/completions"
-            self.api_key = settings.openai_api_key
+                self.url = o_url if o_url else "https://api.openai.com/v1/chat/completions"
+            self.api_key = o_key
         elif self.provider_id == DEEPSEEK:
             if d_len < 3:
                 try_other = True
@@ -48,8 +52,8 @@ class LLM:
                 self.label = "DeepSeek"
                 self.model = "deepseek-v4-flash"
                 self.url = "https://api.deepseek.com/chat/completions"
-                self.api_key = settings.deepseek_api_key
-        
+                self.api_key = d_key
+
         if try_other:
             if self.provider_id == OPENAI and d_len >= 3:
                 self.provider_id = DEEPSEEK
@@ -57,15 +61,14 @@ class LLM:
                 self.label = "DeepSeek"
                 self.model = "deepseek-v4-flash"
                 self.url = "https://api.deepseek.com/chat/completions"
-                self.api_key = settings.deepseek_api_key
-            elif self.provider_id == DEEPSEEK and o_len >= 3:
+                self.api_key = d_key
+            elif self.provider_id == DEEPSEEK and has_openai:
                 self.provider_id = OPENAI
                 self.id = "openai"
                 self.label = "OpenAI"
                 _custom_model = settings.openai_model
-                _custom_url = settings.openai_base_url
                 self.model = _custom_model if _custom_model else "gpt-5.4-mini"
-                self.url = _custom_url if _custom_url else "https://api.openai.com/v1/chat/completions"
-                self.api_key = settings.openai_api_key
+                self.url = o_url if o_url else "https://api.openai.com/v1/chat/completions"
+                self.api_key = o_key
             else:
                 raise ValueError("No valid API key found for the selected provider.")
