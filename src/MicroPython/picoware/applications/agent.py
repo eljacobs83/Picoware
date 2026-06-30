@@ -316,11 +316,6 @@ def run(view_manager) -> None:
                     "message": user_text,
                 })
                 _conversation = result["conversation"]
-                if result["status"] != "completed":
-                    _conversation.append({
-                        "role": "assistant",
-                        "content": result["message"],
-                    })
             except Exception as exc:
                 _conversation.append({
                     "role": "assistant",
