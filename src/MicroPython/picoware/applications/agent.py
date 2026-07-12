@@ -314,6 +314,7 @@ def run(view_manager) -> None:
             try:
                 result = _agent.run_payload({
                     "message": user_text,
+                    "conversation": _conversation,
                 })
                 _conversation = result["conversation"]
             except Exception as exc:
@@ -324,7 +325,6 @@ def run(view_manager) -> None:
 
         _scroll_offset = 32767
         _state = STATE_CHAT
-        _render_chat(view_manager)
         _render_chat(view_manager)
 
 

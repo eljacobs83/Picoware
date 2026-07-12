@@ -1012,12 +1012,50 @@ class SSHClient:
             "DNS lookup failed for '%s': check hostname/WiFi" % host
         ) from last_err
 
+    def _reset_session_state(self):
+        """Reset transport/encryption/channel state before a fresh handshake.
+
+        Without this, retrying after a failed attempt (e.g. wrong password)
+        reuses stale sequence numbers and cipher objects from the previous
+        attempt, so the new plaintext KEXINIT gets encrypted with a dead key
+        and the server can't parse it.
+        """
+        self._server_version = ""
+        self._send_seq = 0
+        self._recv_seq = 0
+        self._session_id = None
+
+        self._encrypted = False
+        self._enc_cipher = None
+        self._dec_cipher = None
+        self._mac_key_c2s = None
+        self._mac_key_s2c = None
+        self._mac_len = 0
+        self._mac_func = None
+
+        self._kex_algorithm = None
+        self._cipher_c2s = None
+        self._cipher_s2c = None
+        self._mac_c2s = None
+        self._mac_s2c = None
+        self._client_kexinit = None
+        self._server_kexinit = None
+
+        self._channel_id = 0
+        self._remote_channel = 0
+        self._remote_window = 0
+        self._remote_max_pkt = 0
+        self._channel_eof = False
+        self._channel_closed = True
+
     def connect(self, host, port, username, password):
         """Full SSH-2 connect: version exchange, KEX, auth"""
         with self._lock:
             if self._connected:
                 self._error = "Already connected"
                 return False
+
+        self._reset_session_state()
 
         try:
             _, info = self._resolve_host(host, port)
@@ -1148,15 +1186,7 @@ class SSHClient:
 
             self._connected = False
             self._authenticated = False
-            self._encrypted = False
-            self._enc_cipher = None
-            self._dec_cipher = None
-            self._mac_key_c2s = None
-            self._mac_key_s2c = None
-            self._session_id = None
-            self._send_seq = 0
-            self._recv_seq = 0
-            self._channel_closed = True
+            self._reset_session_state()
             self._output.clear()
 
         self._close_socket()
